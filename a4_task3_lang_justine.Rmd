@@ -1,0 +1,169 @@
+---
+title: 'Assignment 4: Task 3'
+author: "Justine Lang"
+date: "2023-03-20"
+output: 
+  html_document:
+    theme: readable
+    code_folding: hide
+---
+
+```{r setup, include=TRUE, echo = TRUE, message = FALSE, warning = FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+
+library(tidyverse)
+library(here)
+library(tidytext)
+library(textdata)
+library(pdftools)
+library(ggwordcloud)
+```
+
+
+## Overview
+
+Text here.
+
+Book cover here. 
+
+```{r}
+### Read in pdf
+
+dracula <- pdf_text(here("data", "dracula.pdf"))
+
+### Checking text 
+
+# drac_p100 <- dracula[100]
+# drac_p100
+```
+
+```{r}
+### Make a df
+
+drac_lines <- data.frame(dracula) %>% 
+  mutate(page = 1:n()) %>%
+  mutate(text_full = str_split(dracula, pattern = '\\n')) %>% 
+  unnest(text_full) %>% 
+  mutate(text_full = str_squish(text_full))
+```
+
+```{r}
+### Tidy by chapter
+
+drac_chapts <- drac_lines %>% 
+  slice(-(1:12)) %>% 
+  mutate(chapter = ifelse(str_detect(text_full, "CHAPTER"), text_full, NA)) %>% 
+  fill(chapter, .direction = 'down') %>% 
+  separate(col = chapter, into = c("ch", "num"), sep = " ") 
+  # mutate(chapter = as.numeric(as.roman(num)))
+```
+
+```{r}
+### Get word counts by chapter
+
+drac_words <- drac_chapts %>% 
+  unnest_tokens(word, text_full) %>% 
+  select(-dracula)
+
+drac_wordcount <- drac_words %>% 
+  count(ch, word)
+```
+
+```{r}
+### Remove stop words
+
+drac_words_clean <- drac_words %>% 
+  anti_join(stop_words, by = 'word')
+
+nonstop_counts <- drac_words_clean %>% 
+  count(ch, word)
+```
+
+
+## Top 10 Words
+
+```{r}
+# top_10_words <- nonstop_counts %>% 
+#   group_by(ch) %>% 
+#   arrange(-n) %>% 
+#   slice(1:10) %>%
+#   ungroup()
+# 
+# ### Make some graphs
+# 
+# ggplot(data = top_10_words, aes(x = n, y = word)) +
+#   geom_col(fill = "blue") +
+#   facet_wrap(~ch, scales = "free") ### Neaten graph
+```
+
+
+```{r}
+### top 10 words in whole book
+
+top_10_words_b <- nonstop_counts %>% 
+  arrange(-n) %>% 
+  slice(1:10)
+
+ggplot(data = top_10_words_b, aes(x = n, y = reorder(word, -n))) +
+  geom_col(fill = "darkslategray")+
+  labs(x = "Count", y = "Word", title = "Top 10 Most Frequently Used Words in" ~italic("Dracula"))
+```
+
+```{r}
+### word count for top 100 words in whole book
+
+drac_top100 <- nonstop_counts %>% 
+  arrange(-n) %>% 
+  slice(1:100)
+drac_cloud <- ggplot(data = drac_top100, aes(label = word)) +
+  geom_text_wordcloud(aes(color = n, size = n), shape = "diamond") +
+  scale_size_area(max_size = 6) +
+  scale_color_gradientn(colors = c("darkslategray","orange","gold")) +
+  theme_minimal()
+
+drac_cloud
+```
+
+```{r}
+### sentiment analysis using nrc lexicon
+
+nrc_lex <- get_sentiments(lexicon = "nrc")
+
+### bind got data to nrc
+
+drac_nrc <- drac_words_clean %>% 
+  inner_join(get_sentiments("nrc"))
+
+### get count by sentiment bin
+
+drac_nrc_counts <- drac_nrc %>% 
+  count(sentiment)
+
+ggplot(data = drac_nrc_counts, aes(x = n, y = reorder(sentiment, -n), fill = sentiment))+
+  scale_fill_manual(values=c("anticipation" = "gold",
+                             "joy" = "gold",
+                             "positive" = "gold",
+                             "trust" = "gold",
+                             "surprise" = "gold",
+                             "sadness" = "darkslategray",
+                             "disgust" = "darkslategray",
+                             "anger" = "darkslategray",
+                             "negative" = "darkslategray",
+                             "fear" = "darkslategray"))+
+  geom_col()+
+  labs(x = "Count", y = "Sentiment", title = "Sentiment Analysis of" ~italic("Dracula"))+
+  theme_minimal()+
+  theme(legend.position = "none")
+```
+
+## Citations
+
+Insert Dracula citation 
+
+Crowdsourcing a Word-Emotion Association Lexicon, Saif Mohammad and Peter Turney, Computational Intelligence, 29 (3), 436-465, 2013.
+
+
+
+
+
+
