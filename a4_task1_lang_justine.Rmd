@@ -1,0 +1,112 @@
+---
+title: 'Assignment 4: Task 1'
+author: "Justine Lang"
+date: "2023-03-20"
+output: 
+  html_document: 
+    code_folding: hide
+---
+
+```{r setup, include=TRUE, echo = TRUE, message = FALSE, warning = FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+
+library(tidyverse)
+library(here)
+library(janitor)
+library(sf)
+library(tmap)
+```
+
+
+## Data Overview
+
+Text here
+
+```{r}
+### Read in the data
+
+ca_counties_sf <- read_sf(here("data", "ca_counties", "CA_Counties_TIGER2016.shp")) %>% 
+  clean_names() %>% 
+  select(county_name = namelsad, land_area = aland)
+
+oil_spills <- read_csv(here("data", "Oil_Spill_Incident_Tracking_[ds394].csv")) %>% 
+  clean_names()
+```
+
+
+## Interactive Tmap
+
+```{r}
+### Check CRS
+
+# ca_counties_sf %>% st_crs() ### EPSG 3857, WGS 84
+
+### Make oil_spill data frame sf
+
+oil_spills_sf <- st_as_sf(oil_spills, coords=c("x","y"), crs = st_crs(ca_counties_sf))
+```
+
+```{r}
+### Don't forget caption
+
+tmap_mode(mode = "view")
+
+tm_shape(ca_counties_sf) +
+  tm_polygons(alpha = 0.5) +
+  tm_shape(oil_spills_sf)+
+  tm_dots(col = "orange")
+```
+
+
+## Choropleth Map
+
+```{r}
+### Subset inland oil spills
+
+oil_inland <- oil_spills_sf %>% 
+  filter(inlandmari %in% "Inland")
+
+### Spatial join to find count of inland spills by county
+
+county_oil_sf <- ca_counties_sf %>% 
+  st_join(oil_inland)
+
+### Group by and summarize to get counts
+
+county_oil_count_sf <- county_oil_sf %>% 
+  group_by(county_name) %>%
+  summarize(n_records = sum(!is.na(dfgcontrol)))
+```
+
+```{r}
+### Don't forget caption
+
+### Create choropleth
+
+ggplot()+
+  geom_sf(data= county_oil_count_sf, aes(fill = n_records), color ="black", size = 0.1) +
+  scale_fill_gradientn(colors = c("yellow","orange","red")) +
+  theme_minimal() +
+  labs(fill = "Number of oil spill incidents")
+```
+
+
+## Data Citation
+
+Lampinen, Mark (2020). Oil Spill Incident Tracking [ds394]. California Department of Fish and Game, Office of Spill Prevention and Response. https://gis.data.ca.gov/datasets/CDFW::oil-spill-incident-tracking-ds394-1/about
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
