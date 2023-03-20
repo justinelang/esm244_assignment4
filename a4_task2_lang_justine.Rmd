@@ -1,0 +1,127 @@
+---
+title: 'Task 2: Willamette Falls Fish Passage Time Series'
+author: "Justine Lang"
+date: "2023-03-20"
+output: 
+  html_document: 
+    theme: readable
+    code_folding: hide
+---
+
+```{r setup, include=TRUE, echo = TRUE, message = FALSE, warning = FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+
+library(tidyverse)
+library(here)
+library(janitor)
+library(lubridate)
+library(tsibble)
+library(feasts)
+library(fable)
+library(cowplot)
+```
+
+
+# Overview {.tabset}
+
+Text here
+
+**Data Citation:** Columbia Basin Research, University of Washington. 2023. DART Adult Passage Graphics & Text. [<http://www.cbr.washington.edu/dart/query/adult_graph_text.>](http://www.cbr.washington.edu/dart/query/adult_graph_text.)
+
+Images here
+
+```{r}
+### Read in the data
+
+will_fish <- read_csv(here("data", "willamette_fish_passage.csv")) %>%replace(is.na(.), 0) %>%
+  clean_names() %>% 
+  select("date", "coho", "jack_coho", "steelhead") 
+
+### Read date and make tibble
+
+fish_ts <- will_fish %>% 
+  mutate(date = mdy(date)) %>% 
+  as_tsibble(key = NULL, index = date)
+```
+
+
+
+## Original Time Series
+
+```{r}
+### Make date on x-axis and fish count on y-axis
+
+fish_long <- fish_ts %>%
+  pivot_longer(cols = 2:4, names_to = "species", values_to = "count") %>% 
+    mutate(species = case_when(
+    species == "coho" ~ "Coho",
+    species == "jack_coho" ~ "Jack Coho", 
+    species == "steelhead" ~ "Steelhead"))
+```
+
+```{r}
+### Don't forget caption
+
+### Make plot
+
+ggplot(data = fish_long, aes(x = date, y = count, color = species))+
+  geom_line(size = 0.5, alpha = 0.9)+
+  theme_minimal()+
+  labs(x = "Date",
+       y = "Number of fish",
+       title = "Number of Salmon at Willemette Falls Fish Passage",
+       subtitle = "2001-01-01 to 2010-12-31")+
+  scale_color_manual(values = c("darkgreen", "salmon", "darkgray")) ###change colors
+```
+
+
+Summary text here. 
+
+
+## Seasonplots
+
+```{r}
+### Don't forget caption
+
+fish_long %>% 
+  gg_season(y = count, 
+            pal = c("darkgreen", "salmon", "darkgray")) + ###change color
+  theme_minimal() +
+  labs(x = element_blank(), y = "Daily Fish Count",
+       title = "Daily Count of Fish at Willemette Falls Fish Passage",
+       subtitle = "2001-01-01 to 2010-12-31")
+```
+
+Summary text here.
+
+
+## Annual Counts by Species
+
+```{r}
+### Get counts by year and species
+
+fish_annual <- fish_long %>% 
+   index_by(year = ~year(.)) %>% 
+  group_by(year, species) %>% 
+  summarize(annual_count = sum(count))
+```
+
+```{r}
+### Don't forget caption
+
+### Make plot
+
+ggplot(data = fish_annual, aes(x = year, y = annual_count, color = species))+
+  geom_line(size = 0.75)+
+  theme_minimal()+
+  scale_x_continuous(n.breaks = 10)+
+  labs(x = "Year", y = "Annual Count", 
+       title = "Annual Counts of Salmon at Willemette Falls Fish Passage",
+       subtitle = "2001-01-01 to 2010-12-31")+
+  scale_color_manual(values = c("darkgreen", "salmon", "darkgray")) ###change colors
+```
+
+Summary text here. 
+
+
+
