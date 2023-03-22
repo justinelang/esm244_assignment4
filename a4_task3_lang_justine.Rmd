@@ -22,9 +22,10 @@ library(ggwordcloud)
 
 ## Overview
 
-Text here.
+This analysis examines the word count and connotations of Bram Stoker's well-known 1897 novel *Dracula*. I analyzed the most frequently used words throughout first and last chapters of the book, in addition to the book in its entirety. I then performed a sentiment analysis using the NRC lexicon (Mohammed & Turney, 2013).
 
-Book cover here. 
+![Dracula book cover. Credit: *Penguin Random House*](data/dracula_cover.jpg)]
+
 
 ```{r}
 ### Read in pdf
@@ -66,7 +67,7 @@ drac_words <- drac_chapts %>%
   select(-dracula)
 
 drac_wordcount <- drac_words %>% 
-  count(ch, word)
+  count(num, word)
 ```
 
 ```{r}
@@ -76,28 +77,43 @@ drac_words_clean <- drac_words %>%
   anti_join(stop_words, by = 'word')
 
 nonstop_counts <- drac_words_clean %>% 
-  count(ch, word)
+  count(num, word)
 ```
 
 
 ## Top 10 Words
 
-```{r}
-# top_10_words <- nonstop_counts %>% 
-#   group_by(ch) %>% 
-#   arrange(-n) %>% 
-#   slice(1:10) %>%
-#   ungroup()
-# 
-# ### Make some graphs
-# 
-# ggplot(data = top_10_words, aes(x = n, y = word)) +
-#   geom_col(fill = "blue") +
-#   facet_wrap(~ch, scales = "free") ### Neaten graph
+```{r figure 1, fig.align='center', fig.cap="Figure 1: Top 10 words in the first chapter, with stop words removed."}
+### top 10 words chapter 1
+
+top_10_words_ch1 <- nonstop_counts %>%
+  filter(num == 1) %>% 
+  arrange(-n) %>%
+  slice(1:10)
+
+
+ggplot(data = top_10_words_ch1, aes(x = n, y = reorder(word, -n))) +
+  geom_col(fill = "red4") +
+  labs(x = "Count", y = "Word", title = "Top 10 Most Frequently Used Words in Chapter 1")
+```
+
+```{r figure 2, fig.align='center', fig.cap="Figure 2: Top 10 words in the final chapter, with stop words removed."}
+### top 10 words chapter 27
+
+top_10_words_ch27 <- nonstop_counts %>%
+  filter(num == 27) %>% 
+  arrange(-n) %>%
+  slice(1:10)
+
+
+ggplot(data = top_10_words_ch27, aes(x = n, y = reorder(word, -n))) +
+  geom_col(fill = "red4") +
+  labs(x = "Count", y = "Word", title = "Top 10 Most Frequently Used Words in Chapter 27")
 ```
 
 
-```{r}
+
+```{r figure 3, fig.align='center', fig.cap="Figure 3: Top 10 words in the whole book, with stop words removed."}
 ### top 10 words in whole book
 
 top_10_words_b <- nonstop_counts %>% 
@@ -109,7 +125,10 @@ ggplot(data = top_10_words_b, aes(x = n, y = reorder(word, -n))) +
   labs(x = "Count", y = "Word", title = "Top 10 Most Frequently Used Words in" ~italic("Dracula"))
 ```
 
-```{r}
+
+## Top 100 Words
+
+```{r figure 4, fig.align='center', fig.cap="Figure 4: Word cloud of top 100 words in the whole book."}
 ### word count for top 100 words in whole book
 
 drac_top100 <- nonstop_counts %>% 
@@ -118,13 +137,16 @@ drac_top100 <- nonstop_counts %>%
 drac_cloud <- ggplot(data = drac_top100, aes(label = word)) +
   geom_text_wordcloud(aes(color = n, size = n), shape = "diamond") +
   scale_size_area(max_size = 6) +
-  scale_color_gradientn(colors = c("darkslategray","orange","gold")) +
+  scale_color_gradientn(colors = c("darkslategray","red4","red2")) +
   theme_minimal()
 
 drac_cloud
 ```
 
-```{r}
+
+## Sentiment Analysis
+
+```{r figure 5, fig.align='center', fig.cap="Figure 5: Sentiment analysis using NRC lexicon. Red bars indicate more positive emotions and the dark gray indicate negative emotions."}
 ### sentiment analysis using nrc lexicon
 
 nrc_lex <- get_sentiments(lexicon = "nrc")
@@ -140,11 +162,11 @@ drac_nrc_counts <- drac_nrc %>%
   count(sentiment)
 
 ggplot(data = drac_nrc_counts, aes(x = n, y = reorder(sentiment, -n), fill = sentiment))+
-  scale_fill_manual(values=c("anticipation" = "gold",
-                             "joy" = "gold",
-                             "positive" = "gold",
-                             "trust" = "gold",
-                             "surprise" = "gold",
+  scale_fill_manual(values=c("anticipation" = "red3",
+                             "joy" = "red3",
+                             "positive" = "red3",
+                             "trust" = "red3",
+                             "surprise" = "red3",
                              "sadness" = "darkslategray",
                              "disgust" = "darkslategray",
                              "anger" = "darkslategray",
@@ -156,9 +178,11 @@ ggplot(data = drac_nrc_counts, aes(x = n, y = reorder(sentiment, -n), fill = sen
   theme(legend.position = "none")
 ```
 
+
+
 ## Citations
 
-Insert Dracula citation 
+Stoker, B. (1920) Dracula . Garden City, N.Y. Doubleday, Page & Co. 
 
 Crowdsourcing a Word-Emotion Association Lexicon, Saif Mohammad and Peter Turney, Computational Intelligence, 29 (3), 436-465, 2013.
 
