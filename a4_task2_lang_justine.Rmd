@@ -24,11 +24,13 @@ library(cowplot)
 
 # Overview {.tabset}
 
-Text here
+This analysis explores fish passage data from 2001 to 2010 at the Willamette Falls fish ladder in Oregon. Data were shared and accessed from Columbia River Data Access in Real Time (DART), courtesy of the Oregon Department of Fish and Wildlife (ODFW). This analysis examines steelhead, coho, and coho jack salmon through time series, seasonal plots, and total counts.
 
-**Data Citation:** Columbia Basin Research, University of Washington. 2023. DART Adult Passage Graphics & Text. [<http://www.cbr.washington.edu/dart/query/adult_graph_text.>](http://www.cbr.washington.edu/dart/query/adult_graph_text.)
+**Data Citation:** Columbia Basin Research, University of Washington. 2023. DART Adult Passage Graphics & Text. [http://www.cbr.washington.edu/dart/query/adult_graph_text.](http://www.cbr.washington.edu/dart/query/adult_graph_text.)
 
-Images here
+![Oregon coho salmon. Credit: *Bureau of Land Management*](data/oregon_coho_salmon.jpg)
+
+![Map of Willamette Falls, including fish ladder location and view of the Willamette River. Credit: *US Army Corps of Engineers*](data/will_map.jpg)
 
 ```{r}
 ### Read in the data
@@ -59,8 +61,7 @@ fish_long <- fish_ts %>%
     species == "steelhead" ~ "Steelhead"))
 ```
 
-```{r}
-### Don't forget caption
+```{r figure 1, fig.align='center', fig.cap="Figure 1: Time series plot of total fish counts by date and species from January 1, 2001 to December 31, 2010."}
 
 ### Make plot
 
@@ -68,31 +69,39 @@ ggplot(data = fish_long, aes(x = date, y = count, color = species))+
   geom_line(size = 0.5, alpha = 0.9)+
   theme_minimal()+
   labs(x = "Date",
-       y = "Number of fish",
-       title = "Number of Salmon at Willemette Falls Fish Passage",
+       y = "Fish Count",
+       title = "Salmon Count at Willemette Falls Fish Passage",
        subtitle = "2001-01-01 to 2010-12-31")+
-  scale_color_manual(values = c("darkgreen", "salmon", "darkgray")) ###change colors
+  scale_color_manual(values = c("salmon", "green4", "skyblue")) 
 ```
 
 
-Summary text here. 
+
+Based on this plot:
+
+-  Coho salmon counts appear to have noticeably increased starting in 2009.
+- At a glance, steelhead salmon populations have not changed much over time, with relatively consistent seasonal trends.
+- Coho and jack coho salmon have overlapping seasonal trends; steelhead salmon mostly pass through Willamette Falls at a different time of year.
 
 
 ## Seasonplots
 
-```{r}
-### Don't forget caption
+```{r figure 2, fig.align='center', fig.cap="Figure 2: Seasonplot of daily counts for coho, jack coho, and steelhead salmon from January 1, 2001 to December 31, 2010."}
 
 fish_long %>% 
-  gg_season(y = count, 
-            pal = c("darkgreen", "salmon", "darkgray")) + ###change color
+  gg_season(y = count) + 
   theme_minimal() +
   labs(x = element_blank(), y = "Daily Fish Count",
-       title = "Daily Count of Fish at Willemette Falls Fish Passage",
-       subtitle = "2001-01-01 to 2010-12-31")
+       title = "Daily Salmon Count at Willemette Falls Fish Passage",
+       subtitle = "2001-01-01 to 2010-12-31") +
+  scale_color_viridis_c(breaks = seq(1, 10, 3), labels = seq(2001, 2010, 3))
 ```
 
-Summary text here.
+
+Based on this plot:
+
+- Coho and jack coho salmon pass through the falls around October. 
+- Steelhead salmon pass through the falls year round but are most present in spring and summer.
 
 
 ## Annual Counts by Species
@@ -106,22 +115,26 @@ fish_annual <- fish_long %>%
   summarize(annual_count = sum(count))
 ```
 
-```{r}
-### Don't forget caption
+```{r figure 3, fig.align='center', fig.cap="Figure 3: Annual counts of coho, jack coho, and steelhead salmon from 2001-2010."}
 
 ### Make plot
 
-ggplot(data = fish_annual, aes(x = year, y = annual_count, color = species))+
-  geom_line(size = 0.75)+
-  theme_minimal()+
+ggplot(data = fish_annual, aes(x = year, y = annual_count, color = species)) +
+  geom_line(size = 0.75) +
+  theme_minimal() +
   scale_x_continuous(n.breaks = 10)+
   labs(x = "Year", y = "Annual Count", 
-       title = "Annual Counts of Salmon at Willemette Falls Fish Passage",
-       subtitle = "2001-01-01 to 2010-12-31")+
-  scale_color_manual(values = c("darkgreen", "salmon", "darkgray")) ###change colors
+       title = "Annual Salmon Count at Willemette Falls Fish Passage",
+       subtitle = "2001-01-01 to 2010-12-31") +
+  scale_color_manual(values = c("salmon", "green4", "skyblue")) 
 ```
 
-Summary text here. 
+
+Based on this plot:
+
+- The annual count of steelhead salmon is greater than coho and jack coho, with the exception of around 2008 to 2009. Steelhead numbers plateau a bit around 2007, but increase again around 2009. 
+- Coho salmon increase in 2008, temporarily surpassing steelhead until after 2009, when coho numbers begin to decline again. 
+- Jack coho salmon have the lowest and most consistent count. 
 
 
 
