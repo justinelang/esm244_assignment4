@@ -20,7 +20,7 @@ library(tmap)
 
 ## Data Overview
 
-Text here
+This analysis visualizes California oil spill incident data for 2008, provided by the Office of Spill Prevention and Response. For this data set, an "incident" is defined as "a discharge or threatened discharge of petroleum or other deleterious material into the waters of the state"(Lampinen, 2020). The two maps included in this report are an interactive map of all 2008 spill incidents in California, and a choropleth map of all inland oil spill incidents by county.
 
 ```{r}
 ### Read in the data
@@ -47,8 +47,6 @@ oil_spills_sf <- st_as_sf(oil_spills, coords=c("x","y"), crs = st_crs(ca_countie
 ```
 
 ```{r}
-### Don't forget caption
-
 tmap_mode(mode = "view")
 
 tm_shape(ca_counties_sf) +
@@ -56,6 +54,8 @@ tm_shape(ca_counties_sf) +
   tm_shape(oil_spills_sf)+
   tm_dots(col = "orange")
 ```
+**Figure 1:** An interactive map of all oil spill incidents in California in 2008.
+
 
 
 ## Choropleth Map
@@ -79,7 +79,6 @@ county_oil_count_sf <- county_oil_sf %>%
 ```
 
 ```{r}
-### Don't forget caption
 
 ### Create choropleth
 
@@ -87,8 +86,11 @@ ggplot()+
   geom_sf(data= county_oil_count_sf, aes(fill = n_records), color ="black", size = 0.1) +
   scale_fill_gradientn(colors = c("yellow","orange","red")) +
   theme_minimal() +
-  labs(fill = "Number of oil spill incidents")
+  labs(fill = "Count of oil spill incidents")
 ```
+
+**Figure 2:** Choropleth visualizing California counties based on the count of inland oil incidents for 2008. Red indicates counties with a high number of incidents.
+
 
 
 ## Data Citation
